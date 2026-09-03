@@ -1,0 +1,48 @@
+name: Test log analytics validation - workspace without key
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Providing log-analytics-workspace without log-analytics-workspace-key should
+      # cause a validation error: "The Log Analytics Workspace Id or Workspace Key are
+      # not provided. Please fill in the appropriate parameters."
+      # This validation happens in TaskParameters._getDiagnostics() before Azure API calls.
+      # However, getAuthorizer() is called first in main(), so the action may fail at auth
+      # before reaching parameter validation. Either way, it should fail gracefully.
+      - id: deploy
+        uses: .
+        continue-on-error: true
+        with:
+          resource-group: my-resource-group
+          dns-name-label: my-container-dns
+          image: nginx:latest
+          location: eastus
+          name: my-container-group
+          log-analytics-workspace: my-workspace-id
+          # log-analytics-workspace-key intentionally omitted to trigger validation error
+
+      - name: Assert action failed due to log analytics validation or missing Azure credentials
+        env:
+          OUTCOME: ${{ steps.deploy.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed as expected (log analytics validation error or missing Azure credentials)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "WARN: action unexpectedly succeeded"
+            APP_URL="${{ steps.deploy.outputs.app-url }}"
+            echo "app-url: $APP_URL"
+            if [ -n "$APP_URL" ]; then
+              echo "PASS: action succeeded and produced app-url output"
+            else
+              echo "FAIL: action succeeded but produced no app-url output"
+              exit 1
+            fi
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

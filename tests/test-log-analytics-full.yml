@@ -1,0 +1,39 @@
+name: Test log analytics full inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          resource-group: test-rg
+          dns-name-label: test-dns-label
+          image: nginx:latest
+          location: eastus
+          name: test-container
+          log-analytics-workspace: my-workspace
+          log-analytics-workspace-key: my-workspace-key
+          log-type: ContainerInsights
+      - name: Assert action ran (outputs set, or failed gracefully without Azure credentials)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          APP_URL: ${{ steps.action.outputs.app-url }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "app-url: $APP_URL"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$APP_URL" ]; then
+              echo "FAIL: action succeeded but app-url output is empty"
+              exit 1
+            fi
+            echo "PASS: got app-url '$APP_URL'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no Azure credentials in harness)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

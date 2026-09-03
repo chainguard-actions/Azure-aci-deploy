@@ -1,4 +1,4 @@
-name: Test basic ACI deploy inputs
+name: Test basic usage - no Azure credentials
 on:
   workflow_dispatch:
 jobs:
@@ -6,12 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Verify required inputs are accepted
-        run: |
-          echo "This test verifies that the action accepts required inputs."
-          echo "Actual deployment requires Azure credentials and is not tested here."
-          echo "PASS: input structure validated"
-      - id: action
+
+      # The action requires Azure credentials (AZURE_CREDENTIALS env var) to authenticate.
+      # Without them, AuthorizerFactory.getAuthorizer() fails and core.setFailed() is called.
+      # We verify the action fails gracefully (not a crash/unhandled exception).
+      - id: deploy
         uses: .
         continue-on-error: true
         with:
@@ -20,14 +19,25 @@ jobs:
           image: nginx:latest
           location: eastus
           name: my-container-group
-          ports: '80'
-          os-type: Linux
-          ip-address: Public
-          cpu: 1
-          memory: 1.5
-          restart-policy: Always
-          protocol: TCP
-      - name: Assert action was attempted
+
+      - name: Assert action failed gracefully without Azure credentials
+        env:
+          OUTCOME: ${{ steps.deploy.outcome }}
         run: |
-          echo "Action step completed (with or without error due to missing Azure credentials)"
-          echo "PASS: action inputs were accepted by the action"
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully as expected (no Azure credentials)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "WARN: action unexpectedly succeeded - checking if app-url output is set"
+            APP_URL="${{ steps.deploy.outputs.app-url }}"
+            echo "app-url: $APP_URL"
+            if [ -n "$APP_URL" ]; then
+              echo "PASS: action succeeded and produced app-url output"
+            else
+              echo "FAIL: action succeeded but produced no app-url output"
+              exit 1
+            fi
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

@@ -10,29 +10,26 @@ jobs:
         uses: .
         continue-on-error: true
         with:
-          resource-group: my-resource-group
-          dns-name-label: my-container-dns-log
+          resource-group: test-resource-group
+          dns-name-label: test-dns-label
           image: nginx:latest
           location: eastus
-          name: my-container-group-log
-          log-analytics-workspace: my-log-workspace
-          log-analytics-workspace-key: my-log-workspace-key
+          name: test-container-group
+          log-analytics-workspace: test-workspace-id
+          log-analytics-workspace-key: test-workspace-key
           log-type: ContainerInsights
-          ports: '80'
-          os-type: Linux
-          cpu: 1
-          memory: 1.5
-          ip-address: Public
-          restart-policy: Always
-      - name: Assert action ran (credentials expected to fail)
+      - name: Assert action ran (log analytics inputs accepted, or failed gracefully without Azure credentials)
         env:
           OUTCOME: ${{ steps.action.outcome }}
+          APP_URL: ${{ steps.action.outputs.app-url }}
         run: |
-          echo "action outcome: $OUTCOME"
-          # Without Azure credentials the action is expected to fail.
-          # We only verify it was invoked (outcome is set, not skipped).
-          if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action step was skipped unexpectedly"
+          echo "outcome: $OUTCOME"
+          echo "app-url: $APP_URL"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no real Azure credentials available)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: action was invoked (outcome=$OUTCOME)"

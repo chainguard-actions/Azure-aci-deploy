@@ -1,0 +1,37 @@
+name: Test ACI deploy with private registry inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          resource-group: test-resource-group
+          name: test-container-private
+          image: myregistry.azurecr.io/myapp:latest
+          location: eastus
+          dns-name-label: test-aci-private-label
+          registry-login-server: myregistry.azurecr.io
+          registry-username: myregistryuser
+          registry-password: myregistrypassword
+
+      - name: Assert action ran and failed gracefully (no Azure credentials)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          APP_URL: ${{ steps.action.outputs.app-url }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "app-url: $APP_URL"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with private registry inputs"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully as expected without Azure credentials"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

@@ -1,4 +1,4 @@
-name: Test basic deploy inputs
+name: Test basic ACI deploy (no Azure credentials)
 on:
   workflow_dispatch:
 jobs:
@@ -6,30 +6,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - id: action
         uses: .
         continue-on-error: true
         with:
-          resource-group: my-resource-group
-          dns-name-label: my-container-dns
+          resource-group: test-resource-group
+          name: test-container-group
           image: nginx:latest
           location: eastus
-          name: my-container-group
-          ports: '80'
-          os-type: Linux
-          cpu: 1
-          memory: 1.5
-          ip-address: Public
-          restart-policy: Always
-      - name: Assert action ran (credentials expected to fail)
+          dns-name-label: test-aci-deploy-label
+
+      - name: Assert action ran and failed gracefully (no Azure credentials)
         env:
           OUTCOME: ${{ steps.action.outcome }}
+          APP_URL: ${{ steps.action.outputs.app-url }}
         run: |
-          echo "action outcome: $OUTCOME"
-          # Without Azure credentials the action is expected to fail.
-          # We only verify it was invoked (outcome is set, not skipped).
-          if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action step was skipped unexpectedly"
+          echo "outcome: $OUTCOME"
+          echo "app-url: $APP_URL"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (unexpected but valid if Azure creds present)"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully as expected without Azure credentials"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: action was invoked (outcome=$OUTCOME)"

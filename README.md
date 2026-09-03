@@ -10,7 +10,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 |---------|-----|-----------------|
 | v1.1 | [`v1.1`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1) | — |
 | v1.1.1 | [`v1.1.1`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.1) | — |
-| v1.1.2 | [`v1.1.2`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.2) | — |
+| v1.1.2 | [`v1.1.2`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.2) | [`139a5a4`](https://github.com/Azure/aci-deploy/commit/139a5a47beeb95be44d80e05294b4b6bddd1e110) |
 | v1.1.3 | [`v1.1.3`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.3) | — |
 
 ## Privacy

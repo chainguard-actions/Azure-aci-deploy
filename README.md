@@ -8,8 +8,8 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
-| v1.1 | [`v1.1`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1) | — |
-| v1.1.1 | [`v1.1.1`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.1) | — |
+| v1.1 | [`v1.1`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1) | [`dc71d31`](https://github.com/Azure/aci-deploy/commit/dc71d318c9a93233a712f02b2efaca70f8697b20) |
+| v1.1.1 | [`v1.1.1`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.1) | [`2954073`](https://github.com/Azure/aci-deploy/commit/2954073d5073e686bac622b3f30342329f4639e6) |
 | v1.1.2 | [`v1.1.2`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.2) | [`139a5a4`](https://github.com/Azure/aci-deploy/commit/139a5a47beeb95be44d80e05294b4b6bddd1e110) |
 | v1.1.3 | [`v1.1.3`](https://github.com/chainguard-actions/Azure-aci-deploy/tree/v1.1.3) | [`28cafb8`](https://github.com/Azure/aci-deploy/commit/28cafb864979bc5b44cd1f3fd45522727eb5a3db) |
 

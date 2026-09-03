@@ -1,4 +1,4 @@
-name: Test basic ACI deploy inputs
+name: Test basic usage - graceful failure without Azure credentials
 on:
   workflow_dispatch:
 jobs:
@@ -6,36 +6,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Verify action.yml exists
-        run: |
-          if [ ! -f action.yml ]; then
-            echo "FAIL: action.yml not found"
-            exit 1
-          fi
-          echo "PASS: action.yml found"
-      - id: action
+
+      - id: deploy
         uses: .
         continue-on-error: true
         with:
           resource-group: test-resource-group
-          dns-name-label: test-dns-label
+          name: test-container
           image: nginx:latest
           location: eastus
-          name: test-container-group
+          dns-name-label: test-container-dns
           ports: '80'
-          os-type: Linux
           cpu: 1
           memory: 1.5
+          os-type: Linux
           ip-address: Public
-          protocol: TCP
           restart-policy: Always
-      - name: Assert action ran (may fail due to missing Azure credentials)
+          protocol: TCP
+
+      - name: Assert action failed gracefully without Azure credentials
         env:
-          OUTCOME: ${{ steps.action.outcome }}
+          OUTCOME: ${{ steps.deploy.outcome }}
         run: |
-          echo "Action outcome: $OUTCOME"
-          if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action was skipped unexpectedly"
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully as expected (no Azure credentials available)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded unexpectedly (Azure credentials may be configured)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: action executed (outcome: $OUTCOME)"

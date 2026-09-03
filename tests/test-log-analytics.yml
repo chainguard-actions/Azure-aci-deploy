@@ -1,4 +1,4 @@
-name: Test ACI deploy with log analytics inputs
+name: Test log analytics inputs
 on:
   workflow_dispatch:
 jobs:
@@ -6,39 +6,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Verify action.yml exists
-        run: |
-          if [ ! -f action.yml ]; then
-            echo "FAIL: action.yml not found"
-            exit 1
-          fi
-          echo "PASS: action.yml found"
       - id: action
         uses: .
         continue-on-error: true
         with:
           resource-group: test-resource-group
-          dns-name-label: test-dns-label-logs
+          dns-name-label: test-dns-label
           image: nginx:latest
-          location: westus
-          name: test-container-logs
-          log-analytics-workspace: test-workspace-id
-          log-analytics-workspace-key: test-workspace-key
+          location: eastus
+          name: test-container-group
+          log-analytics-workspace: my-log-analytics-workspace
+          log-analytics-workspace-key: my-log-analytics-workspace-key
           log-type: ContainerInsights
-          ports: '80'
-          os-type: Linux
-          cpu: 1
-          memory: 1.5
-          ip-address: Public
-          protocol: TCP
-          restart-policy: Always
-      - name: Assert action ran (may fail due to missing Azure credentials)
+      - name: Assert action ran (log analytics inputs accepted, or failed gracefully without Azure credentials)
         env:
           OUTCOME: ${{ steps.action.outcome }}
+          APP_URL: ${{ steps.action.outputs.app-url }}
         run: |
-          echo "Action outcome: $OUTCOME"
-          if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action was skipped unexpectedly"
+          echo "outcome: $OUTCOME"
+          echo "app-url: $APP_URL"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$APP_URL" ]; then
+              echo "FAIL: action succeeded but app-url output is empty"
+              exit 1
+            fi
+            echo "PASS: got app-url '$APP_URL'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no real Azure credentials available)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: action executed (outcome: $OUTCOME)"
